@@ -45,7 +45,7 @@ def get_db():
 # 添加CORS中间件
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://cysheper.top", "http://localhost:8080", "http://8.138.38.167:8080"],  # 允许所有源，生产环境建议指定具体域名
+    allow_origins=["*"],  # 允许所有源，生产环境建议指定具体域名
     allow_credentials=True,
     allow_methods=["*"],  # 允许所有方法
     allow_headers=["*"],  # 允许所有头
