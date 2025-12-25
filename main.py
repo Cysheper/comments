@@ -1,17 +1,34 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, Mapped, mapped_column
 from datetime import datetime
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Annotated
 
 # 数据库配置
 DATABASE_URL = "sqlite:///./comments.db"
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+# Token 配置 - 在生产环境中应该使用更安全的方式存储
+API_TOKEN = "sk-I-promis-you-dont-know-this-token-hahaha"  # 可以改成你想要的 Token
+
+# Token 验证函数
+def verify_token(authorization: Annotated[str | None, Header()] = None):
+    """验证请求头中的 Token"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="缺少 Authorization header")
+    
+    # 支持 "Bearer token" 和直接 "token" 两种格式
+    token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
+    
+    if token != API_TOKEN:
+        raise HTTPException(status_code=403, detail="Token 验证失败")
+    
+    return token
 
 # 数据库模型
 class Comment(Base):
@@ -86,7 +103,10 @@ async def get_comments(sort: str = "desc"):
 
 
 @app.post("/post_comment")
-async def post_comment(comment: CommentCreate):
+async def post_comment(comment: CommentCreate, token: str = Header(None, alias="Authorization")):
+    # 验证 Token
+    verify_token(token)
+    
     db = SessionLocal()
     try:
         # 创建新留言
@@ -125,7 +145,10 @@ async def post_comment(comment: CommentCreate):
 
 
 @app.put("/update_comment/{comment_id}")
-async def update_comment(comment_id: int, comment: CommentCreate):
+async def update_comment(comment_id: int, comment: CommentCreate, token: str = Header(None, alias="Authorization")):
+    # 验证 Token
+    verify_token(token)
+    
     db = SessionLocal()
     try:
         existing_comment = db.query(Comment).filter(Comment.id == comment_id).first()
@@ -168,7 +191,10 @@ async def update_comment(comment_id: int, comment: CommentCreate):
 
 
 @app.delete("/delete_comment/{comment_id}")
-async def delete_comment(comment_id: int):
+async def delete_comment(comment_id: int, token: str = Header(None, alias="Authorization")):
+    # 验证 Token
+    verify_token(token)
+    
     db = SessionLocal()
     try:
         comment = db.query(Comment).filter(Comment.id == comment_id).first()

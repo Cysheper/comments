@@ -504,7 +504,8 @@
     </div>
 
     <script>
-        const API_BASE = 'http://8.138.38.167:8000';
+        const API_BASE = 'https://api.cysheper.top';
+        const API_TOKEN = 'sk-I-promis-you-dont-know-this-token-hahaha';  // Token 令牌，需要与后端一致
         let allComments = [];
 
         // 页面加载时获取数据
@@ -649,7 +650,8 @@
                     response = await fetch(`${API_BASE}/update_comment/${id}`, {
                         method: 'PUT',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Authorization': API_TOKEN
                         },
                         body: JSON.stringify(data)
                     });
@@ -658,7 +660,8 @@
                     response = await fetch(`${API_BASE}/post_comment`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Authorization': API_TOKEN
                         },
                         body: JSON.stringify(data)
                     });
@@ -687,7 +690,10 @@
 
             try {
                 const response = await fetch(`${API_BASE}/delete_comment/${id}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': API_TOKEN
+                    }
                 });
 
                 const result = await response.json();
