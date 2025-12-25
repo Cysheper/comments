@@ -13,6 +13,16 @@ if test -f .backend.pid
     rm -f .backend.pid
 end
 
+# 停止通过 PID 文件记录的前端服务
+if test -f .frontend.pid
+    set pid (cat .frontend.pid)
+    if ps -p $pid > /dev/null 2>&1
+        kill $pid 2>/dev/null
+        echo "  ✓ 前端服务已停止 (PID: $pid)"
+    end
+    rm -f .frontend.pid
+end
+
 # 停止所有相关进程
 set backend_pids (pgrep -f "python main.py")
 if test -n "$backend_pids"
