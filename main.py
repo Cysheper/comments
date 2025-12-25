@@ -104,8 +104,6 @@ async def get_comments(sort: str = "desc"):
 
 @app.post("/post_comment")
 async def post_comment(comment: CommentCreate, token: str = Header(None, alias="Authorization")):
-    # 验证 Token
-    verify_token(token)
     
     db = SessionLocal()
     try:
