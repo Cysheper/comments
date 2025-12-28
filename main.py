@@ -101,6 +101,27 @@ async def get_comments(sort: str = "desc"):
     finally:
         db.close()
 
+    
+def post_News_To_QQ(comment: Comment):
+    import requests, os
+    qq_webhook_url = "http://8.138.38.167:8000/qq"
+    token = os.getenv("QQ_BOT_TOKEN", "your-qq-bot-token")  # 请设置你的 QQ 机器人 Token
+    data = {
+        "data": "【新留言通知】\n用户：{} \n内容：{}\n时间：{}".format(
+            comment.username if not comment.isAnonymous else "匿名用户",
+            comment.content,
+            comment.createTime.strftime("%Y-%m-%d %H:%M:%S")
+        ),
+    }
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+    try:
+        response = requests.post(qq_webhook_url, json=data, headers=headers)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        print(f"Failed to send notification to QQ: {e}")
+
 
 @app.post("/post_comment")
 async def post_comment(comment: CommentCreate, token: str = Header(None, alias="Authorization")):
@@ -119,7 +140,10 @@ async def post_comment(comment: CommentCreate, token: str = Header(None, alias="
         db.add(new_comment)
         db.commit()
         db.refresh(new_comment)
-        
+
+        # 发送通知到 QQ
+        post_News_To_QQ(new_comment)
+
         return {
             "code": 200,
             "message": "success",
@@ -140,6 +164,7 @@ async def post_comment(comment: CommentCreate, token: str = Header(None, alias="
         }
     finally:
         db.close()
+
 
 
 @app.put("/update_comment/{comment_id}")
